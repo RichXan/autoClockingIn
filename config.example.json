@@ -14,7 +14,8 @@
     "wakeDelaySeconds": 1,
     "swipeDelaySeconds": 1,
     "unlockDelaySeconds": 2,
-    "launchDelaySeconds": 3
+    "launchDelaySeconds": 3,
+    "postLaunchHoldSeconds": 5
   },
   "bark": {
     "baseUrl": "https://bark.example.com/your-device-key/",

@@ -47,6 +47,7 @@ Assert-True ($null -ne $exampleConfig.pinDigits) "Example config missing pinDigi
 Assert-True ($null -ne $exampleConfig.dingTalkPackage) "Example config missing dingTalkPackage"
 Assert-True ($null -ne $exampleConfig.bark.baseUrl) "Example config missing bark.baseUrl"
 Assert-True ($null -ne $exampleConfig.swipe.startX) "Example config missing swipe.startX"
+Assert-True ($null -ne $exampleConfig.timings.postLaunchHoldSeconds) "Example config missing timings.postLaunchHoldSeconds"
 Assert-True ($null -ne $exampleConfig.schedule.taskName) "Example config missing schedule.taskName"
 
 $gitIgnore = Get-Content -LiteralPath $GitIgnorePath -Raw

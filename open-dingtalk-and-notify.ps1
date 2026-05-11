@@ -105,6 +105,7 @@ function Initialize-Config {
     $script:SwipeDelaySeconds = if ($null -eq $Config.timings.swipeDelaySeconds) { 1 } else { [int] $Config.timings.swipeDelaySeconds }
     $script:UnlockDelaySeconds = if ($null -eq $Config.timings.unlockDelaySeconds) { 2 } else { [int] $Config.timings.unlockDelaySeconds }
     $script:LaunchDelaySeconds = if ($null -eq $Config.timings.launchDelaySeconds) { 3 } else { [int] $Config.timings.launchDelaySeconds }
+    $script:PostLaunchHoldSeconds = if ($null -eq $Config.timings.postLaunchHoldSeconds) { 0 } else { [int] $Config.timings.postLaunchHoldSeconds }
 
     if ($script:PinDigits.Count -eq 0) {
         throw "Missing required config value: pinDigits"
@@ -148,6 +149,10 @@ function Start-DingTalk {
     $isDingTalkForeground = [bool] ($focus | Select-String -Pattern ([regex]::Escape($script:DingTalkPackage)) -Quiet)
     if (-not $isDingTalkForeground) {
         throw "DingTalk launch was not confirmed in the foreground window."
+    }
+
+    if ($script:PostLaunchHoldSeconds -gt 0) {
+        Start-Sleep -Seconds $script:PostLaunchHoldSeconds
     }
 }
 

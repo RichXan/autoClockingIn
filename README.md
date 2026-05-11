@@ -79,7 +79,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\install-scheduled-tas
     "wakeDelaySeconds": 1,
     "swipeDelaySeconds": 1,
     "unlockDelaySeconds": 2,
-    "launchDelaySeconds": 3
+    "launchDelaySeconds": 3,
+    "postLaunchHoldSeconds": 5
   },
   "bark": {
     "baseUrl": "https://bark.example.com/your-device-key/",
@@ -105,6 +106,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\install-scheduled-tas
 - `screenOffAfterNotification`：发送通知后是否息屏。
 - `swipe`：解锁上滑坐标，当前示例适合 `1260x2800` 分辨率。
 - `timings`：每个步骤之间的等待时间。
+- `timings.postLaunchHoldSeconds`：确认钉钉打开后继续停留的秒数，再发送通知并息屏。
 - `bark.baseUrl`：Bark 推送基础地址，建议以 `/` 结尾。
 - `schedule.startTime`：Windows 任务计划开始触发时间。
 - `schedule.randomDelayMinutes`：随机延迟分钟数。
