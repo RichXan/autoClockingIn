@@ -34,6 +34,7 @@ Assert-True ($scriptText -match "ConvertFrom-Json") "Main script should read JSO
 Assert-True ($scriptText -match "ConfigPath") "Main script should expose a configurable ConfigPath"
 Assert-True ($scriptText -notmatch "mqTBZNJR5LauL4pSq5izF4") "Main script must not contain the private Bark token"
 Assert-True ($scriptText -notmatch "979979") "Main script must not contain the private phone PIN"
+Assert-True ($scriptText -notmatch '\$focus\s+-notmatch') "Main script must not use array -notmatch for foreground checks"
 
 $installTaskText = Get-Content -LiteralPath $InstallTaskPath -Raw
 Assert-True ($installTaskText -match "Register-ScheduledTask") "Install script should register a Windows scheduled task"

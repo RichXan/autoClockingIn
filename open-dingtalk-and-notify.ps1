@@ -71,6 +71,46 @@ function Turn-OffPhoneScreen {
     }
 }
 
+function Initialize-Config {
+    param(
+        $Config
+    )
+
+    $script:BarkBaseUrl = $Config.bark.baseUrl
+    $script:SuccessTitle = $Config.bark.successTitle
+    $script:SuccessBody = $Config.bark.successBody
+    $script:FailureTitle = $Config.bark.failureTitle
+    $script:FailureBodyPrefix = $Config.bark.failureBodyPrefix
+    $script:IconUrl = $Config.bark.iconUrl
+
+    Assert-ConfigValue $Config.adbPath "adbPath"
+    Assert-ConfigValue $Config.dingTalkPackage "dingTalkPackage"
+    Assert-ConfigValue $Config.bark.baseUrl "bark.baseUrl"
+    Assert-ConfigValue $Config.bark.successTitle "bark.successTitle"
+    Assert-ConfigValue $Config.bark.successBody "bark.successBody"
+    Assert-ConfigValue $Config.bark.failureTitle "bark.failureTitle"
+    Assert-ConfigValue $Config.bark.failureBodyPrefix "bark.failureBodyPrefix"
+    Assert-ConfigValue $Config.swipe.startX "swipe.startX"
+    Assert-ConfigValue $Config.swipe.startY "swipe.startY"
+    Assert-ConfigValue $Config.swipe.endX "swipe.endX"
+    Assert-ConfigValue $Config.swipe.endY "swipe.endY"
+    Assert-ConfigValue $Config.swipe.durationMs "swipe.durationMs"
+
+    $script:AdbPath = $Config.adbPath
+    $script:PinDigits = @($Config.pinDigits)
+    $script:DingTalkPackage = $Config.dingTalkPackage
+    $script:Swipe = $Config.swipe
+    $script:ScreenOffAfterNotification = if ($null -eq $Config.screenOffAfterNotification) { $true } else { [bool] $Config.screenOffAfterNotification }
+    $script:WakeDelaySeconds = if ($null -eq $Config.timings.wakeDelaySeconds) { 1 } else { [int] $Config.timings.wakeDelaySeconds }
+    $script:SwipeDelaySeconds = if ($null -eq $Config.timings.swipeDelaySeconds) { 1 } else { [int] $Config.timings.swipeDelaySeconds }
+    $script:UnlockDelaySeconds = if ($null -eq $Config.timings.unlockDelaySeconds) { 2 } else { [int] $Config.timings.unlockDelaySeconds }
+    $script:LaunchDelaySeconds = if ($null -eq $Config.timings.launchDelaySeconds) { 3 } else { [int] $Config.timings.launchDelaySeconds }
+
+    if ($script:PinDigits.Count -eq 0) {
+        throw "Missing required config value: pinDigits"
+    }
+}
+
 function Start-DingTalk {
     if (-not (Test-Path -LiteralPath $script:AdbPath)) {
         throw "adb.exe not found: $script:AdbPath"
@@ -105,47 +145,15 @@ function Start-DingTalk {
     Start-Sleep -Seconds $script:LaunchDelaySeconds
 
     $focus = & $script:AdbPath shell dumpsys window
-    if ($focus -notmatch [regex]::Escape($script:DingTalkPackage)) {
+    $isDingTalkForeground = [bool] ($focus | Select-String -Pattern ([regex]::Escape($script:DingTalkPackage)) -Quiet)
+    if (-not $isDingTalkForeground) {
         throw "DingTalk launch was not confirmed in the foreground window."
     }
 }
 
-$config = Read-Config -Path $ConfigPath
-
-Assert-ConfigValue $config.adbPath "adbPath"
-Assert-ConfigValue $config.dingTalkPackage "dingTalkPackage"
-Assert-ConfigValue $config.bark.baseUrl "bark.baseUrl"
-Assert-ConfigValue $config.bark.successTitle "bark.successTitle"
-Assert-ConfigValue $config.bark.successBody "bark.successBody"
-Assert-ConfigValue $config.bark.failureTitle "bark.failureTitle"
-Assert-ConfigValue $config.bark.failureBodyPrefix "bark.failureBodyPrefix"
-Assert-ConfigValue $config.swipe.startX "swipe.startX"
-Assert-ConfigValue $config.swipe.startY "swipe.startY"
-Assert-ConfigValue $config.swipe.endX "swipe.endX"
-Assert-ConfigValue $config.swipe.endY "swipe.endY"
-Assert-ConfigValue $config.swipe.durationMs "swipe.durationMs"
-
-$script:AdbPath = $config.adbPath
-$script:PinDigits = @($config.pinDigits)
-$script:DingTalkPackage = $config.dingTalkPackage
-$script:BarkBaseUrl = $config.bark.baseUrl
-$script:SuccessTitle = $config.bark.successTitle
-$script:SuccessBody = $config.bark.successBody
-$script:FailureTitle = $config.bark.failureTitle
-$script:FailureBodyPrefix = $config.bark.failureBodyPrefix
-$script:IconUrl = $config.bark.iconUrl
-$script:Swipe = $config.swipe
-$script:ScreenOffAfterNotification = if ($null -eq $config.screenOffAfterNotification) { $true } else { [bool] $config.screenOffAfterNotification }
-$script:WakeDelaySeconds = if ($null -eq $config.timings.wakeDelaySeconds) { 1 } else { [int] $config.timings.wakeDelaySeconds }
-$script:SwipeDelaySeconds = if ($null -eq $config.timings.swipeDelaySeconds) { 1 } else { [int] $config.timings.swipeDelaySeconds }
-$script:UnlockDelaySeconds = if ($null -eq $config.timings.unlockDelaySeconds) { 2 } else { [int] $config.timings.unlockDelaySeconds }
-$script:LaunchDelaySeconds = if ($null -eq $config.timings.launchDelaySeconds) { 3 } else { [int] $config.timings.launchDelaySeconds }
-
-if ($script:PinDigits.Count -eq 0) {
-    throw "Missing required config value: pinDigits"
-}
-
 try {
+    $config = Read-Config -Path $ConfigPath
+    Initialize-Config -Config $config
     Start-DingTalk
     Send-BarkNotification -Title $script:SuccessTitle -Body $script:SuccessBody -Icon $script:IconUrl
     Turn-OffPhoneScreen
@@ -153,9 +161,13 @@ try {
 } catch {
     $failureBody = "$script:FailureBodyPrefix$($_.Exception.Message)"
     try {
-        Send-BarkNotification -Title $script:FailureTitle -Body $failureBody -Icon $script:IconUrl
-        Turn-OffPhoneScreen
-        Write-Host "DingTalk launch failed. Bark failure notification sent."
+        if (-not [string]::IsNullOrWhiteSpace($script:BarkBaseUrl)) {
+            Send-BarkNotification -Title $script:FailureTitle -Body $failureBody -Icon $script:IconUrl
+            Turn-OffPhoneScreen
+            Write-Host "DingTalk launch failed. Bark failure notification sent."
+        } else {
+            Write-Warning "Bark base URL is unavailable; failure notification cannot be sent."
+        }
     } catch {
         Write-Warning "Failed to send Bark failure notification: $($_.Exception.Message)"
     }
