@@ -1,0 +1,32 @@
+{
+  "adbPath": "D:\\ProgramFile\\platform-tools\\adb.exe",
+  "pinDigits": [1, 2, 3, 4, 5, 6],
+  "dingTalkPackage": "com.alibaba.android.rimet",
+  "screenOffAfterNotification": true,
+  "swipe": {
+    "startX": 630,
+    "startY": 2700,
+    "endX": 630,
+    "endY": 150,
+    "durationMs": 800
+  },
+  "timings": {
+    "wakeDelaySeconds": 1,
+    "swipeDelaySeconds": 1,
+    "unlockDelaySeconds": 2,
+    "launchDelaySeconds": 3
+  },
+  "bark": {
+    "baseUrl": "https://bark.example.com/your-device-key/",
+    "successTitle": "钉钉已启动",
+    "successBody": "已亮屏、解锁并启动钉钉。",
+    "failureTitle": "钉钉启动失败",
+    "failureBodyPrefix": "失败原因：",
+    "iconUrl": "https://play-lh.googleusercontent.com/J93kHXLNdp9pIwH4SKWUoqxr-EUaRh7QAPo5E3Zj1BEbRi_gfLLT2xN-lsSklpiDUSQ8=w240-h480"
+  },
+  "schedule": {
+    "taskName": "OpenDingTalkAndNotifyRandomMorning",
+    "startTime": "08:45",
+    "randomDelayMinutes": 5
+  }
+}
