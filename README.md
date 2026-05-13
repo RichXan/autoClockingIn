@@ -1,6 +1,6 @@
 # Windows 自动打开钉钉
 
-这是一个面向 Windows 的小型自动化项目：到达计划时间后，通过 ADB 控制安卓手机亮屏、解锁并打开钉钉。脚本会验证钉钉是否处于前台，然后通过 Bark 发送成功或失败通知，最后可选地让手机息屏。
+这是一个面向 Windows 和 macOS 的小型自动化项目：到达计划时间后，通过 ADB 控制安卓手机亮屏、解锁并打开钉钉。脚本会验证钉钉是否处于前台，然后通过 Bark 发送成功或失败通知，最后可选地让手机息屏。
 
 项目只负责“自动打开钉钉”和“发送打开结果通知”，不执行最终打卡确认动作。
 
@@ -14,6 +14,7 @@
 - 使用 Bark 推送成功或失败通知。
 - 通知后可选息屏。
 - 支持 Windows 任务计划程序定时执行。
+- 支持 macOS 通过 shell 脚本手动执行，也可以配合 `launchd`、`cron` 或其他定时工具。
 - 支持 `08:45` 到 `08:50` 这类随机执行窗口。
 - 敏感信息放在本地配置文件中，不提交到 GitHub。
 
@@ -22,6 +23,7 @@
 ```text
 .
 ├── open-dingtalk-and-notify.ps1   # 主脚本：控制手机、打开钉钉、发送通知
+├── open-dingtalk-and-notify.sh    # macOS/Linux Bash 版主脚本
 ├── install-scheduled-task.ps1     # 安装或更新 Windows 任务计划
 ├── config.example.json            # 示例配置，可提交到 GitHub
 ├── config.local.json              # 本机私有配置，已被 .gitignore 忽略
@@ -44,13 +46,22 @@ Copy-Item .\config.example.json .\config.local.json
 ```
 
 5. 修改 `config.local.json`，填入本机真实配置。
-6. 手动运行一次主脚本验证：
+6. 手动运行一次主脚本验证。
+
+Windows：
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\open-dingtalk-and-notify.ps1"
 ```
 
-7. 安装或更新 Windows 定时任务：
+macOS：
+
+```bash
+chmod +x ./open-dingtalk-and-notify.sh
+./open-dingtalk-and-notify.sh ./config.local.json
+```
+
+7. 如果在 Windows 上使用，安装或更新 Windows 定时任务：
 
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\install-scheduled-task.ps1"
@@ -113,6 +124,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\install-scheduled-tas
 
 ## 手动运行
 
+### Windows
+
 在项目目录中运行：
 
 ```powershell
@@ -124,6 +137,39 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\open-dingtalk-and-not
 ```powershell
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File ".\open-dingtalk-and-notify.ps1" -ConfigPath ".\config.local.json"
 ```
+
+### macOS
+
+macOS 版本使用同一份 JSON 配置，但需要把 `config.local.json` 里的 `adbPath` 改成 macOS 上的路径，例如：
+
+```json
+"adbPath": "/opt/homebrew/bin/adb"
+```
+
+或：
+
+```json
+"adbPath": "/Users/your-name/Library/Android/sdk/platform-tools/adb"
+```
+
+首次运行前给脚本执行权限：
+
+```bash
+chmod +x ./open-dingtalk-and-notify.sh
+```
+
+运行：
+
+```bash
+./open-dingtalk-and-notify.sh ./config.local.json
+```
+
+macOS 脚本依赖：
+
+- `bash`
+- `python3`：用于读取 JSON 配置和 URL 编码。
+- `curl`：用于发送 Bark 通知。
+- `adb`：用于控制安卓手机。
 
 ## Windows 定时任务
 
